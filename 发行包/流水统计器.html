@@ -1,0 +1,1411 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>银行流水进账统计 · 香港审计工具</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Claude 风格色盘：奶油米底 + 珊瑚橙主色 + 温暖灰 */
+    --bg:#faf9f5;          /* 奶油米 */
+    --card:#ffffff;
+    --card-soft:#f4efe6;   /* 米色次级背景 */
+    --ink:#1f1f1f;         /* 近黑 */
+    --ink-2:#2d2d2d;
+    --muted:#64615c;       /* 暖灰 */
+    --muted-2:#8a857e;
+    --line:#e8e4d9;        /* 暖边线 */
+    --line-soft:#efeae0;
+    --accent:#cc785c;      /* Claude 珊瑚橙 */
+    --accent-hover:#b8654c;
+    --accent-soft:#f5e5dd; /* 橙色浅底 */
+    --ok:#5a7a4e;          /* 橄榄绿 */
+    --ok-soft:#e8eee0;
+    --warn:#a85c00;        /* 焦糖橙 */
+    --warn-soft:#f9ecdd;
+    --err:#a64452;         /* 砖红 */
+    --err-soft:#f4e1e3;
+
+    --serif: "Fraunces", "Tiempos Headline", "Noto Serif SC", Georgia, "Songti SC", serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --mono: ui-monospace, "SF Mono", "Menlo", Consolas, monospace;
+    --radius:8px;
+    --radius-lg:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:var(--sans);font-size:15px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+
+  .wrap{max-width:880px;margin:0 auto;padding:48px 24px 80px;}
+  header{margin-bottom:32px;position:relative;padding-right:120px;min-height:72px}
+  @media (max-width:560px){
+    header{padding-right:0}
+    #sfx-toggle{position:static !important;display:inline-flex;margin-bottom:14px}
+  }
+  h1{font-family:var(--serif);font-size:32px;margin:0 0 8px;color:var(--ink);
+     font-weight:500;letter-spacing:-0.01em;line-height:1.2}
+  h1 .highlight{color:var(--accent);font-style:italic}
+  .sub{color:var(--muted);font-size:14px;letter-spacing:0}
+  .sub .dot{color:var(--line);margin:0 8px}
+
+  /* 卡片：温和白底 + 极淡阴影 */
+  .card{background:var(--card);border:1px solid var(--line);
+    padding:24px 28px;border-radius:var(--radius-lg);
+    box-shadow:0 1px 2px rgba(20,20,20,.04);
+    margin-bottom:20px}
+
+  /* Drop zone */
+  #drop{
+    display:block;position:relative;
+    border:2px dashed var(--line);padding:48px 28px;text-align:center;
+    background:var(--card-soft);cursor:pointer;
+    transition:border-color .2s, background .2s;user-select:none;
+    min-height:280px;border-radius:var(--radius);
+  }
+  #drop:hover,#drop.hover{border-color:var(--accent);background:var(--accent-soft)}
+  #drop.working{cursor:default;border-color:var(--accent);border-style:solid;background:var(--card)}
+  #drop.done{cursor:pointer;border-color:var(--ok);border-style:solid;background:var(--ok-soft)}
+  #drop.err{cursor:pointer;border-color:var(--err);border-style:solid;background:var(--err-soft)}
+  #drop .icon{font-size:40px;margin-bottom:14px;line-height:1;opacity:.9}
+  #drop .main{font-family:var(--serif);font-size:20px;color:var(--ink);
+    font-weight:500;margin-bottom:8px;line-height:1.3;letter-spacing:-0.005em}
+  #drop .hint{color:var(--muted);font-size:14px;line-height:1.7;max-width:480px;margin:0 auto}
+  #drop input{display:none}
+  #drop .state{display:none}
+  #drop .state.show{display:block}
+
+  /* 柔和进度条：细线 + 珊瑚橙填充 */
+  .progress{margin:18px auto 8px;width:min(460px,92%);height:6px;
+    background:var(--line-soft);border-radius:99px;overflow:hidden;position:relative}
+  .progress .bar{height:100%;background:var(--accent);border-radius:99px;
+    width:0%;transition:width .25s ease}
+  .progress-text{margin-top:10px;font-size:13px;color:var(--muted);
+    font-variant-numeric:tabular-nums}
+
+  /* 处理过程树 */
+  .tree-header{font-size:13px;color:var(--ink-2);margin-bottom:14px;
+    text-align:left;display:flex;align-items:center;gap:8px}
+  .tree-header .dot-pulse{width:8px;height:8px;border-radius:50%;
+    background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+  .tree-header #work-title{font-weight:500}
+  .tree-count{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums;
+    font-size:13px}
+  .tree{
+    font-family:var(--mono);font-size:12.5px;line-height:1.9;color:var(--ink-2);
+    max-height:280px;overflow:auto;text-align:left;
+    background:var(--card-soft);border:1px solid var(--line);padding:14px 18px;
+    border-radius:var(--radius);
+    scrollbar-width:thin;scrollbar-color:var(--muted-2) transparent;
+  }
+  .tree::-webkit-scrollbar{width:8px}
+  .tree::-webkit-scrollbar-thumb{background:var(--muted-2);border-radius:4px;opacity:.5}
+  .tree-row{display:flex;gap:10px;align-items:baseline;white-space:nowrap;overflow:hidden;
+    padding:1px 0;animation:rowIn .18s ease}
+  @keyframes rowIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
+  .tree-row .branch{color:var(--muted-2);flex:0 0 auto;font-family:var(--mono);opacity:.6}
+  .tree-row .ico{flex:0 0 auto;width:16px;text-align:center;font-size:12px}
+  .tree-row .label{flex:1 1 auto;overflow:hidden;text-overflow:ellipsis}
+  .tree-row .meta{flex:0 0 auto;color:var(--muted-2);font-size:11.5px;margin-left:10px;
+    font-variant-numeric:tabular-nums}
+  .tree-row.wait  .ico{color:var(--muted-2)}
+  .tree-row.wait  .label{color:var(--muted-2)}
+  .tree-row.busy  .ico{color:var(--accent);animation:spin 1s linear infinite}
+  .tree-row.busy  .label{color:var(--ink)}
+  .tree-row.busy  .meta{color:var(--accent)}
+  .tree-row.ok    .ico{color:var(--ok)}
+  .tree-row.skip  .ico{color:var(--warn)}
+  .tree-row.skip  .label{color:var(--muted-2)}
+  .tree-row.skip  .meta{color:var(--warn)}
+  .tree-row.fail  .ico{color:var(--err)}
+  .tree-row.fail  .label{color:var(--err)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* 徽章 */
+  .chips{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:99px;
+    font-size:13px;background:var(--card);color:var(--muted);
+    border:1px solid var(--line);font-variant-numeric:tabular-nums}
+  .chip.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+  .chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+  .chip.err{background:var(--err-soft);color:var(--err);border-color:transparent}
+
+  /* 进阶选项 */
+  details{margin-top:16px}
+  details > summary{cursor:pointer;color:var(--accent);font-size:14px;
+    outline:none;list-style:none;user-select:none;padding:8px 0;font-weight:500}
+  details > summary::-webkit-details-marker{display:none}
+  details > summary::before{content:"›  ";display:inline-block;
+    transition:transform .15s;font-family:var(--mono)}
+  details[open] > summary::before{transform:rotate(90deg)}
+  details[open] > summary{margin-bottom:4px}
+  .opts{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px 20px}
+  .opts label{display:block}
+  .opts label .lab{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
+  .opts input{width:100%;padding:9px 12px;border:1px solid var(--line);
+    border-radius:6px;font-size:14px;background:var(--card);color:var(--ink);
+    font-family:var(--sans);transition:border-color .15s}
+  .opts input:focus{outline:none;border-color:var(--accent)}
+
+  /* 详细日志 */
+  #log-wrap{margin-top:14px}
+  #log-wrap summary{font-size:13px;color:var(--muted)}
+  #log{margin-top:8px;max-height:200px;overflow:auto;padding:12px 14px;
+    background:#1f1e1a;color:#d8d3c6;font-family:var(--mono);
+    font-size:12.5px;border-radius:var(--radius);line-height:1.7}
+  #log .ok{color:#a3c58d}
+  #log .err{color:#e89098}
+  #log .warn{color:#e0b26a}
+
+  /* 结果区 */
+  #results{display:none}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+  .stat{padding:18px 20px;background:var(--card-soft);border:1px solid var(--line);
+    border-radius:var(--radius)}
+  .stat .lab{font-size:12px;color:var(--muted);margin-bottom:6px;
+    text-transform:uppercase;letter-spacing:.06em}
+  .stat .val{font-family:var(--serif);font-size:26px;font-weight:500;color:var(--ink);
+    line-height:1.15;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .stat.money .val{font-size:22px}
+  @media (max-width:520px){.stat .val,.stat.money .val{font-size:20px}}
+  .stat.money .val{color:var(--accent)}
+
+  /* 按钮 */
+  .btn{display:inline-flex;align-items:center;gap:8px;
+    background:var(--accent);color:#fff;
+    border:1px solid transparent;padding:11px 20px;
+    font-size:14px;font-weight:500;font-family:var(--sans);letter-spacing:0;
+    border-radius:6px;cursor:pointer;transition:background .15s, transform .1s}
+  .btn:hover{background:var(--accent-hover)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+  .btn.ghost:hover{background:var(--card-soft);border-color:var(--muted-2)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* 表格 */
+  table{width:100%;border-collapse:separate;border-spacing:0;margin-top:14px;font-size:13.5px;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  th,td{padding:10px 14px;text-align:right;color:var(--ink-2);
+    border-bottom:1px solid var(--line-soft);font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  th{background:var(--card-soft);color:var(--muted);font-weight:500;
+    text-transform:uppercase;font-size:11.5px;letter-spacing:.06em;
+    border-bottom:1px solid var(--line)}
+  tr:last-child td{border-bottom:0}
+  tr.total td{font-weight:600;background:var(--accent-soft);color:var(--ink);
+    border-top:1px solid var(--accent)}
+  tr.empty td{color:var(--muted-2);background:var(--card-soft);font-size:12px}
+
+  /* 通知框 */
+  .notice{margin-top:18px;padding:12px 16px;background:var(--ok-soft);
+    border-left:3px solid var(--ok);font-size:13.5px;color:var(--ok);
+    border-radius:4px}
+  .err-box{margin-top:14px;padding:12px 16px;background:var(--err-soft);
+    border-left:3px solid var(--err);font-size:13.5px;color:var(--err);
+    border-radius:4px;display:none}
+
+  /* Footer */
+  footer{color:var(--muted);font-size:12.5px;margin-top:36px;text-align:center;line-height:1.9}
+  footer .serif{font-family:var(--serif);font-style:italic;color:var(--accent);font-size:13px}
+
+  /* 使用步骤 */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:4px}
+  @media (max-width:680px){.steps{grid-template-columns:1fr}}
+  .step{position:relative;padding:18px 18px 18px 52px;background:var(--card-soft);
+    border:1px solid var(--line);border-radius:var(--radius);transition:border-color .15s}
+  .step:hover{border-color:var(--accent)}
+  .step .num{position:absolute;left:16px;top:18px;width:26px;height:26px;
+    border-radius:50%;background:var(--accent);color:#fff;
+    font-weight:600;font-size:13px;font-family:var(--serif);
+    display:flex;align-items:center;justify-content:center;line-height:1}
+  .step .t{font-family:var(--serif);font-size:17px;font-weight:500;color:var(--ink);
+    margin-bottom:6px;letter-spacing:-.005em}
+  .step .d{font-size:13.5px;color:var(--muted);line-height:1.75}
+  .step .d code{background:var(--card);padding:2px 7px;color:var(--accent);
+    font-family:var(--mono);font-size:12.5px;border-radius:4px;border:1px solid var(--line)}
+  .step .d b{color:var(--ink)}
+
+  /* FAQ */
+  .faq summary{padding:14px 0;font-size:15px;color:var(--ink);
+    font-weight:500;border-bottom:1px solid var(--line)}
+  .faq summary::before{content:"+";color:var(--accent);font-weight:500;
+    margin-right:10px;display:inline-block;width:14px;transition:transform .15s}
+  .faq details[open] > summary::before{content:"−"}
+  .faq details[open] > summary{border-bottom-color:transparent}
+  .faq .a{padding:4px 0 18px 24px;color:var(--muted);font-size:14px;line-height:1.8;
+    border-bottom:1px solid var(--line)}
+  .faq .a b{color:var(--ink)}
+  .faq .a code{background:var(--card-soft);padding:2px 7px;font-size:12.5px;
+    color:var(--accent);font-family:var(--mono);border-radius:4px}
+  .faq details:last-of-type .a{border-bottom:0}
+
+  .section-title{font-size:12px;color:var(--muted);font-weight:500;
+    text-transform:uppercase;letter-spacing:.1em;margin:0 0 16px}
+
+  /* 音效开关 */
+  #sfx-toggle{position:absolute;top:6px;right:0;
+    font-size:12.5px;color:var(--muted);
+    background:transparent;border:1px solid var(--line);padding:6px 12px;
+    cursor:pointer;border-radius:99px;transition:all .15s;
+    display:inline-flex;align-items:center;gap:6px}
+  #sfx-toggle:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+  /* 完成横幅 */
+  .clear-banner{font-family:var(--serif);font-size:24px;color:var(--ink);
+    font-weight:500;margin-bottom:18px;text-align:center;padding:14px 18px;
+    border-bottom:1px solid var(--line);letter-spacing:-.01em}
+  .clear-banner .check{color:var(--ok);margin-right:8px;font-style:normal}
+
+  /* idle-state 内的警告 tip */
+  #drop .tip{margin-top:18px;padding:12px 16px;background:var(--warn-soft);
+    border:1px solid var(--warn);border-radius:var(--radius);
+    color:var(--warn);font-size:13px;line-height:1.7;max-width:520px;
+    margin-left:auto;margin-right:auto;text-align:left}
+  #drop .tip b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button id="sfx-toggle" title="音效开关">🔊 提示音</button>
+    <h1>银行流水 <span class="highlight">进账统计</span></h1>
+    <div class="sub">
+      上传 DBS 月结单 PDF，自动汇总每月进账金额与笔数
+      <span class="dot">·</span>
+      生成 Excel 报表用于报价与做账
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="section-title">使用步骤</div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <div class="t">从网银下载月结单</div>
+        <div class="d">
+          登录银行网银 → <code>账户月结单</code> / <code>电子对账单</code> → 下载每个月份的 <b>PDF</b>。
+          <br><span style="color:#b45309">注意：必须是银行原版 PDF，<b>不要用手机拍照或截图</b>。</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <div class="t">整个文件夹/压缩包拖进来</div>
+        <div class="d">
+          <b>不用解压</b>、<b>不用挑</b>，整个 ZIP 压缩包或整个文件夹直接拖进下面灰框即可。
+          <br>里面的 Word、Excel、发票图等非月结单会自动跳过。
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <div class="t">下载 Excel 报表</div>
+        <div class="d">
+          处理完顶部会显示 <b>进账笔数 / 折合 HKD</b>，点「下载完整 Excel 报表」即可。
+          <br>把 Excel 发给你的会计师，用于报价和后续做账。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <label id="drop" for="file">
+      <!-- 状态 1：待拖入 -->
+      <div class="state show" data-state="idle">
+        <div class="icon">📂</div>
+        <div class="main">把文件拖到这里</div>
+        <div class="hint">支持 ZIP 压缩包、整个文件夹，或直接选 PDF<br>非月结单（Word、Excel、图片等）会自动忽略</div>
+        <div class="tip">
+          <b>小提示：</b>如果文件来自<b>微信</b>、<b>iCloud</b> 或<b>网盘</b>拖不进来，
+          请先右键另存到桌面，或<b>点击此处用文件选择器</b>。
+        </div>
+      </div>
+
+      <!-- 状态 2：处理中（树状图实时更新） -->
+      <div class="state" data-state="working">
+        <div class="tree-header">
+          <span class="dot-pulse"></span>
+          <span id="work-title">正在处理</span>
+          <span id="tree-count" class="tree-count">0 / 0</span>
+        </div>
+        <div id="tree" class="tree"></div>
+        <div class="progress"><div class="bar" id="work-bar"></div></div>
+        <div class="progress-text" id="work-progress-text">&nbsp;</div>
+      </div>
+
+      <!-- 状态 3：完成 -->
+      <div class="state" data-state="done">
+        <div class="icon">✨</div>
+        <div class="main" id="done-title">解析完成</div>
+        <div class="hint" id="done-sub">—</div>
+        <div class="chips" id="done-chips"></div>
+        <div class="progress-text" style="margin-top:18px;color:var(--muted)">↓ 向下滚动查看结果，或点此重新开始</div>
+      </div>
+
+      <!-- 状态 4：失败 -->
+      <div class="state" data-state="err">
+        <div class="icon">⚠️</div>
+        <div class="main" id="err-title">没能解析出来</div>
+        <div class="hint" id="err-sub">—</div>
+        <div class="progress-text" style="margin-top:18px;color:var(--muted)">点击此处重新选择</div>
+      </div>
+
+      <input id="file" type="file" accept=".pdf,.zip,application/pdf,application/zip" multiple>
+    </label>
+
+    <details>
+      <summary>进阶选项（通常不需要改）</summary>
+      <div class="opts">
+        <label><span class="lab">公司名（留空自动识别）</span><input id="opt-company" placeholder="例：Miheng Trading Limited"></label>
+        <label><span class="lab">审计账期 · 开始</span><input id="opt-start" type="date"></label>
+        <label><span class="lab">审计账期 · 结束</span><input id="opt-end" type="date"></label>
+        <label><span class="lab">USD → HKD 汇率</span><input id="rate-USD" type="number" step="0.0001" value="7.78"></label>
+        <label><span class="lab">EUR → HKD 汇率</span><input id="rate-EUR" type="number" step="0.0001" value="8.85"></label>
+        <label><span class="lab">JPY → HKD 汇率</span><input id="rate-JPY" type="number" step="0.0001" value="0.04987"></label>
+        <label><span class="lab">CNY → HKD 汇率</span><input id="rate-CNY" type="number" step="0.0001" value="1.25"></label>
+        <label><span class="lab">SGD → HKD 汇率</span><input id="rate-SGD" type="number" step="0.0001" value="5.416"></label>
+        <label><span class="lab">GBP → HKD 汇率</span><input id="rate-GBP" type="number" step="0.0001" value="10.2"></label>
+        <label><span class="lab">AUD → HKD 汇率</span><input id="rate-AUD" type="number" step="0.0001" value="5.1"></label>
+      </div>
+    </details>
+
+    <details id="log-wrap" style="display:none">
+      <summary>查看详细日志（排查用）</summary>
+      <pre id="log"></pre>
+    </details>
+    <div id="err" class="err-box"></div>
+  </div>
+
+  <div id="results" class="card">
+    <div class="clear-banner"><span class="check">✓</span>已生成报表</div>
+    <div class="stats">
+      <div class="stat"><div class="lab">进账笔数</div><div class="val" id="s-count">—</div></div>
+      <div class="stat money"><div class="lab">折合 HKD</div><div class="val" id="s-hkd">—</div></div>
+      <div class="stat"><div class="lab">覆盖月份</div><div class="val" id="s-months">—</div></div>
+      <div class="stat"><div class="lab">月结单张数</div><div class="val" id="s-files">—</div></div>
+    </div>
+
+    <button id="download" class="btn">下载 Excel 报表</button>
+    <button id="reset" class="btn ghost" style="margin-left:8px">重新选择</button>
+
+    <h3 class="section-title" style="margin-top:28px">月度进账汇总</h3>
+    <div style="overflow-x:auto"><table id="preview"></table></div>
+
+    <div class="notice">
+      数据已在本地浏览器生成，下载的 Excel 与上方预览完全一致。
+    </div>
+  </div>
+
+  <div class="card faq">
+    <div class="section-title">常见问题</div>
+
+    <details>
+      <summary>我的银行流水安全吗？会被上传到哪里？</summary>
+      <div class="a">
+        所有 PDF 只在你本机的<b>浏览器里</b>解析，<b>不会</b>发送到任何服务器。
+        关掉这个页面，所有数据立刻从内存清除。你可以断网后依然使用本页（首次加载需要联网获取解析库，之后浏览器会缓存）。
+      </div>
+    </details>
+
+    <details>
+      <summary>支持哪些银行？</summary>
+      <div class="a">
+        目前已适配 <b>DBS 星展银行</b>（综合月结单，Combined Statement）。
+        其他银行（HSBC、汇丰、恒生、招行永隆、中银香港等）暂未内置解析规则，请联系你的会计师提交一张样本即可快速扩展。
+      </div>
+    </details>
+
+    <details>
+      <summary>PDF 必须是什么格式？手机截图/拍照可以吗？</summary>
+      <div class="a">
+        必须是从银行网银/手机 App 直接下载的 <b>原版 PDF 文件</b>（文本可以选中复制的那种）。
+        截图、拍照、扫描件都<b>不支持</b>，因为里面没有文字数据，只有图像。
+        如果你手上只有截图，请回到网银里的「月结单/电子对账单」栏位重新下载 PDF。
+      </div>
+    </details>
+
+    <details>
+      <summary>有多个账户、多种外币怎么办？</summary>
+      <div class="a">
+        DBS 综合月结单本身已经把 HKD / USD / EUR / JPY / CNY / SGD 等账户合并在同一份 PDF 里，直接拖进来就行。
+        工具会按币种分栏汇总，并按内置汇率折算成 HKD（可在<b>「进阶选项」</b>里改汇率）。
+      </div>
+    </details>
+
+    <details>
+      <summary>缺了某个月的 PDF 怎么办？</summary>
+      <div class="a">
+        不影响使用 —— 工具只统计你提供的那些月份，下载的 Excel 里有一个 <b>「源文件」</b>sheet 会列出本次一共读了哪几张月结单、覆盖了哪几个月，方便你核对有没有漏。
+        缺的月份补齐后重新拖一次即可。
+      </div>
+    </details>
+
+    <details>
+      <summary>处理了一下显示「未能解析出任何交易」？</summary>
+      <div class="a">
+        多半是以下情况：<br>
+        1) PDF 实际是扫描件 / 图片（见上一条）；<br>
+        2) 不是 DBS 银行的月结单（见上一条）；<br>
+        3) 账期内这个账户无任何交易（空月结单，这是正常的，不影响其他月份）。<br>
+        如果都不是，请把一张样本 PDF 发给你的会计师排查。
+      </div>
+    </details>
+
+    <details>
+      <summary>Excel 里每个 sheet 是做什么的？</summary>
+      <div class="a">
+        • <b>进账汇总</b>：月 × 币种 的进账金额矩阵，报价按这个算。<br>
+        • <b>进账明细</b>：每一笔进账的日期、金额、对手方、源文件 —— 后续做账对凭证用。<br>
+        • <b>全部交易</b>：含支出，用于和银行余额做完整性核对。<br>
+        • <b>源文件</b>：记录每张 PDF 覆盖了哪些月份。
+      </div>
+    </details>
+  </div>
+
+  <footer>
+    <span class="serif">完全本地处理</span> · 文件不会上传到任何服务器，关掉页面所有数据即清除。
+    <br>如需支持其他银行 · 请联系你的会计师
+    <br><span style="color:var(--muted-2);margin-top:6px;display:inline-block">v1.2 · 2026-04</span>
+  </footer>
+</div>
+
+<!-- 第三方库：PDF 解析 + Excel 生成 + ZIP 解压 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+<script>
+// ------------------------------------------------------------------
+// 初始化
+// ------------------------------------------------------------------
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const $ = s => document.querySelector(s);
+const drop = $("#drop");
+const fileInput = $("#file");
+const logEl = $("#log");
+const errEl = $("#err");
+const results = $("#results");
+const treeEl = $("#tree");
+const treeCountEl = $("#tree-count");
+const sfxToggle = $("#sfx-toggle");
+
+// ------------------------------------------------------------------
+// 8-bit 音效 (Web Audio API - 零外部依赖)
+// ------------------------------------------------------------------
+let sfxOn = localStorage.getItem("pixelSound") !== "off";
+function renderSfxToggle(){
+  sfxToggle.textContent = sfxOn ? "🔊 提示音" : "🔇 已静音";
+}
+renderSfxToggle();
+sfxToggle.addEventListener("click", () => {
+  sfxOn = !sfxOn;
+  localStorage.setItem("pixelSound", sfxOn ? "on" : "off");
+  renderSfxToggle();
+  if(sfxOn) SFX.pdfDone();
+});
+
+// 柔和提示音：正弦波 + 低音量 + 长包络，像 iOS 通知而非游戏音效
+function beep(freq, durMs=180, type="sine", vol=0.04){
+  if(!sfxOn) return;
+  try{
+    const ctx = beep._ctx ||= new (window.AudioContext || window.webkitAudioContext)();
+    if(ctx.state === "suspended") ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(vol, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + durMs/1000);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + durMs/1000 + 0.02);
+  }catch(_){}
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const SFX = {
+  drop:     () => beep(523, 120),                  // C5 轻柔 "叮"
+  pdfDone:  () => beep(880, 40, "sine", 0.02),     // A5 非常轻的 "滴"
+  skip:     () => {},                              // 跳过不响，避免太吵
+  allDone:  async () => {                          // 两音柔和: E-A (大三度)
+    beep(659, 180); await sleep(140);
+    beep(880, 260);
+  },
+  err:      () => beep(330, 300, "sine", 0.05),    // 低音单响
+};
+
+// ------------------------------------------------------------------
+// 处理过程树 DOM
+// ------------------------------------------------------------------
+function treeClear(){ treeEl.innerHTML = ""; treeCountEl.textContent = "0 / 0"; }
+function treeCount(done, total){ treeCountEl.textContent = `${done} / ${total}`; }
+
+// 添加一行到树；key 唯一定位，parent 为父 key（可空，表示顶层）
+function treeAdd(key, {parent=null, icon="○", label="", meta="", status="wait", indent=null}={}){
+  if(treeEl.querySelector(`[data-key="${CSS.escape(key)}"]`)) return;  // 已存在不重复添加
+  const row = document.createElement("div");
+  row.className = "tree-row " + status;
+  row.dataset.key = key;
+  // 缩进深度：自动按 parent 链计算，或手工指定
+  let depth = 0;
+  if(indent !== null){
+    depth = indent;
+  } else if(parent){
+    let p = parent, safety = 10;
+    while(p && safety--){
+      depth++;
+      const prow = treeEl.querySelector(`[data-key="${CSS.escape(p)}"]`);
+      p = prow ? prow.dataset.parent : null;
+    }
+  }
+  row.dataset.parent = parent || "";
+  row.dataset.depth = depth;
+  // 分支画法：前 depth-1 层用 "│  "，最深层用 "├─ "
+  let branch = "";
+  for(let i=0; i<depth-1; i++) branch += "│  ";
+  if(depth > 0) branch += "├─ ";
+  row.innerHTML = `<span class="branch">${branch}</span>`
+    + `<span class="ico"></span>`
+    + `<span class="label"></span>`
+    + `<span class="meta"></span>`;
+  row.querySelector(".ico").textContent = icon;
+  row.querySelector(".label").textContent = label;
+  row.querySelector(".meta").textContent = meta;
+  treeEl.appendChild(row);
+  // 自动滚到底
+  treeEl.scrollTop = treeEl.scrollHeight;
+}
+
+function treeUpdate(key, {icon, label, meta, status}={}){
+  const row = treeEl.querySelector(`[data-key="${CSS.escape(key)}"]`);
+  if(!row) return;
+  if(status){
+    row.classList.remove("wait","busy","ok","skip","fail");
+    row.classList.add(status);
+  }
+  if(icon != null)  row.querySelector(".ico").textContent = icon;
+  if(label != null) row.querySelector(".label").textContent = label;
+  if(meta != null)  row.querySelector(".meta").textContent = meta;
+}
+
+// ------------------------------------------------------------------
+// 柔和进度条 (单条填充)
+// ------------------------------------------------------------------
+function setProgress(pct){
+  pct = Math.max(0, Math.min(1, pct));
+  const bar = $("#work-bar");
+  if(bar) bar.style.width = (pct * 100).toFixed(1) + "%";
+}
+
+drop.addEventListener("click", (ev) => {
+  // 处理中禁止再点击
+  if(drop.classList.contains("working")){ ev.preventDefault(); return; }
+  // 让同一个文件可以再次选择
+  fileInput.value = "";
+});
+["dragenter","dragover"].forEach(e => drop.addEventListener(e, ev=>{
+  ev.preventDefault(); drop.classList.add("hover");
+}));
+["dragleave","drop"].forEach(e => drop.addEventListener(e, ev=>{
+  ev.preventDefault(); drop.classList.remove("hover");
+}));
+drop.addEventListener("drop", ev => {
+  ev.preventDefault();
+  // ⚠️ 关键：必须同步捕获 DataTransfer 的状态，否则 await 后 Chrome 会断联
+  const dt = ev.dataTransfer;
+  const syncFiles = dt.files ? Array.from(dt.files) : [];
+
+  // 诊断日志：方便排查微信 / iCloud / 传输助手拖失败的情况
+  console.log("[drop] dt.files:", syncFiles.map(f => ({name:f.name, size:f.size, type:f.type})));
+  console.log("[drop] dt.types:", dt.types);
+
+  // 只在检测到真正的文件夹拖拽时才走 webkitGetAsEntry 路径
+  // 否则直接用 dt.files —— 对微信/iCloud 的 "promised files" 更稳
+  const entries = [];
+  let hasFolder = false;
+  if(dt.items && dt.items.length){
+    for(let i=0; i<dt.items.length; i++){
+      const it = dt.items[i];
+      if(it.kind !== "file") continue;
+      try{
+        const e = it.webkitGetAsEntry?.();
+        if(e){
+          entries.push(e);
+          if(e.isDirectory) hasFolder = true;
+        }
+      }catch(err){
+        console.warn("[drop] webkitGetAsEntry threw:", err);
+      }
+    }
+  }
+
+  if(hasFolder){
+    // 有文件夹 → 必须走递归 entry walker 才能拿到里面的文件
+    collectFilesFromEntries(entries, syncFiles).then(files => handleFiles(files));
+  } else {
+    // 全是普通文件 → 直接用 dt.files，绕开 webkitGetAsEntry 可能的异常
+    handleFiles(syncFiles);
+  }
+});
+fileInput.addEventListener("change", ev => handleFiles(Array.from(ev.target.files)));
+$("#reset").addEventListener("click", () => { location.reload(); });
+
+// 从已捕获的 FileSystemEntry 列表递归收集所有文件；
+// 若 entries 空或 walk 失败，回退到同步捕获的 dt.files
+async function collectFilesFromEntries(entries, fallbackFiles){
+  if(!entries.length) return fallbackFiles;
+
+  const files = [];
+  async function walk(entry, prefix=""){
+    try{
+      if(entry.isFile){
+        await new Promise((res, rej) => entry.file(f => {
+          try{ Object.defineProperty(f, "relPath", {value: prefix + f.name}); }catch(_){}
+          files.push(f);
+          res();
+        }, err => {
+          console.warn("[drop] entry.file failed:", entry.name, err);
+          res();  // 不要让一个失败的文件阻塞整体
+        }));
+      } else if(entry.isDirectory){
+        const reader = entry.createReader();
+        let batch;
+        do{
+          batch = await new Promise(res => reader.readEntries(res, err => {
+            console.warn("[drop] readEntries failed:", entry.name, err);
+            res([]);
+          }));
+          for(const sub of batch) await walk(sub, prefix + entry.name + "/");
+        } while(batch.length);
+      }
+    }catch(e){
+      console.warn("[drop] walk failed:", entry.name, e);
+    }
+  }
+  for(const e of entries) await walk(e);
+
+  // Chrome 偶尔会"断联"导致 walk 返回空 —— 回退到 dt.files
+  if(!files.length && fallbackFiles.length){
+    console.warn("[drop] entries walk yielded 0 files, falling back to dt.files");
+    return fallbackFiles;
+  }
+  return files;
+}
+
+function log(msg, cls=""){
+  $("#log-wrap").style.display = "block";
+  const line = document.createElement("div");
+  if(cls) line.className=cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function showErr(msg){
+  setState("err", {title:"未能处理", sub: msg});
+}
+
+// ---------------- 状态机：让用户每一步都看懂 ----------------
+function setState(name, data={}){
+  drop.classList.remove("working","done","err");
+  if(name === "working") drop.classList.add("working");
+  else if(name === "done") drop.classList.add("done");
+  else if(name === "err") drop.classList.add("err");
+  drop.querySelectorAll(".state").forEach(el => {
+    el.classList.toggle("show", el.dataset.state === name);
+  });
+  if(name === "working"){
+    if(data.title) $("#work-title").textContent = data.title;
+    if("pct" in data) setProgress(data.pct);
+    if("progressText" in data) $("#work-progress-text").textContent = data.progressText || " ";
+  } else if(name === "done"){
+    if(data.title) $("#done-title").textContent = data.title;
+    if("sub" in data) $("#done-sub").textContent = data.sub || "";
+    if("chips" in data){
+      $("#done-chips").innerHTML = data.chips.map(c =>
+        `<span class="chip ${c.type||""}">${c.text}</span>`).join("");
+    }
+  } else if(name === "err"){
+    if(data.title) $("#err-title").textContent = data.title;
+    if("sub" in data) $("#err-sub").textContent = data.sub || "";
+  }
+}
+
+// 让浏览器有机会重绘 UI（在紧密循环里必须 yield）
+function tick(){ return new Promise(r => setTimeout(r, 0)); }
+
+// ------------------------------------------------------------------
+// PDF 文本提取 — 把 pdf.js 的 item 列表还原成按行的纯文本
+// ------------------------------------------------------------------
+async function extractPdfText(input){
+  const buf = (input instanceof ArrayBuffer) ? input : await input.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({
+    data: buf,
+    cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/",
+    cMapPacked: true,
+    standardFontDataUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/",
+  }).promise;
+  const allText = [];
+  for(let i=1; i<=pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    // 按 y 分组为行
+    const items = content.items.map(it => ({
+      x: it.transform[4], y: it.transform[5], str: it.str, w: it.width
+    }));
+    items.sort((a,b)=> b.y - a.y || a.x - b.x);
+    const lines = [];
+    let curY = null, curLine = [];
+    const Y_TOL = 3;
+    for(const it of items){
+      if(curY===null || Math.abs(it.y - curY) > Y_TOL){
+        if(curLine.length) lines.push(curLine);
+        curLine = [it]; curY = it.y;
+      } else {
+        curLine.push(it);
+      }
+    }
+    if(curLine.length) lines.push(curLine);
+    for(const line of lines){
+      line.sort((a,b)=> a.x - b.x);
+      // 在 item 之间用空格连接；若已含空格则不重复
+      let text = "";
+      let prevX = null;
+      for(const it of line){
+        if(prevX!==null && (it.x - prevX) > 2 && !text.endsWith(" ") && !it.str.startsWith(" ")){
+          text += " ";
+        }
+        text += it.str;
+        prevX = it.x + (it.w || 0);
+      }
+      allText.push(text);
+    }
+  }
+  return allText.join("\n");
+}
+
+// ------------------------------------------------------------------
+// DBS 月结单解析（与 Python 版逻辑完全一致）
+// ------------------------------------------------------------------
+const RE_SECTION = /FCY NRA ACCT\s+境外机构境内外汇账户\s+(\S+)\s+Currency\s+币种\s*[:：]\s*([A-Z]{3})/g;
+const RE_DATE_HEAD = /^(\d{2}-\d{2}-\d{4})\s+(.*)/;
+const NUM = "[\\d,]+\\.\\d{2}";
+const RE_TWO = new RegExp(`(.*?)\\s+(${NUM})\\s+(${NUM})\\s*$`);
+const RE_ONE = new RegExp(`(.*?)\\s+(${NUM})\\s*$`);
+const RE_BROUGHT = new RegExp(`BALANCE BROUGHT FORWARD[^\\n]*?(${NUM})`);
+
+function toNum(s){ return parseFloat(s.replace(/,/g,"")); }
+function parseDate(s){
+  const [d,m,y] = s.split("-").map(Number);
+  return new Date(y, m-1, d);
+}
+function ymKey(date){ return date.getFullYear() + "-" + String(date.getMonth()+1).padStart(2,"0"); }
+
+function splitSections(text){
+  const matches = [];
+  let m;
+  RE_SECTION.lastIndex = 0;
+  while((m = RE_SECTION.exec(text)) !== null){
+    matches.push({pos: m.index, acct: m[1], ccy: m[2]});
+  }
+  const sections = [];
+  for(let i=0; i<matches.length; i++){
+    const start = matches[i].pos;
+    const end = i+1 < matches.length ? matches[i+1].pos : text.length;
+    sections.push({
+      acct: matches[i].acct,
+      ccy: matches[i].ccy,
+      body: text.substring(start, end)
+    });
+  }
+  return sections;
+}
+
+function parseSection(body){
+  const txns = [];
+  const lines = body.split("\n").map(l => l.trim());
+  let i = 0;
+  // 跳到第一行 BALANCE BROUGHT FORWARD
+  while(i < lines.length && !lines[i].includes("BALANCE BROUGHT FORWARD")) i++;
+  i++;
+  const current = [];
+  const skipStarts = ["Transaction Date", "交易日", "Date 日期", "Page 页数",
+                      "FCY NRA ACCT", "3038496 540"];
+  while(i < lines.length){
+    const ln = lines[i];
+    if(!ln){ i++; continue; }
+    if(ln.includes("No transactions during the period") || ln.includes("此期间无交易")){ i++; continue; }
+    if(skipStarts.some(p => ln.startsWith(p))){ i++; continue; }
+
+    const dm = RE_DATE_HEAD.exec(ln);
+    if(dm){
+      if(dm[2].includes("BALANCE BROUGHT FORWARD")){ i++; continue; }
+      const tm = RE_TWO.exec(dm[2]);
+      if(tm){
+        current.push({
+          date: parseDate(dm[1]),
+          desc: [tm[1].trim()],
+          amount: toNum(tm[2]),
+          balance: toNum(tm[3]),
+        });
+      }
+      i++; continue;
+    }
+    if(current.length) current[current.length-1].desc.push(ln);
+    i++;
+  }
+  return current.map(t => ({
+    date: t.date,
+    desc: t.desc.filter(Boolean).join(" ").trim(),
+    amount: t.amount,
+    balance: t.balance,
+  }));
+}
+
+function guessKind(desc){
+  const u = desc.toUpperCase();
+  if(u.includes("REMITTANCE IN") || u.includes("DEPOSIT") || desc.includes("利息存入")) return "credit";
+  if(u.includes("REMITTANCE CHARGES") || u.includes("REMITTANCE CHGS") ||
+     desc.includes("利息税") || u.includes("CHARGE") || u.includes("DEBIT")) return "debit";
+  if(u.includes("REMITTANCE")) return "debit";
+  return "debit";
+}
+
+function parseStatement(text, sourceFile){
+  const sections = splitSections(text);
+  // 按 (acct, ccy) 合并跨段（跨页时同一账户 section 可能出现多次）
+  const grouped = new Map();
+  for(const s of sections){
+    const k = s.acct + "|" + s.ccy;
+    if(!grouped.has(k)) grouped.set(k, {acct: s.acct, ccy: s.ccy, bodies: []});
+    grouped.get(k).bodies.push(s.body);
+  }
+  const txns = [];
+  for(const g of grouped.values()){
+    const mergedBody = g.bodies.join("\n");
+    const parsed = parseSection(mergedBody);
+    const mo = RE_BROUGHT.exec(mergedBody);
+    let prev = mo ? toNum(mo[1]) : null;
+    for(const t of parsed){
+      let kind;
+      if(prev === null){
+        kind = guessKind(t.desc);
+      } else {
+        const delta = +(t.balance - prev).toFixed(2);
+        if(delta > 0.001) kind = "credit";
+        else if(delta < -0.001) kind = "debit";
+        else kind = guessKind(t.desc);
+      }
+      txns.push({
+        sourceFile, accountNo: g.acct, currency: g.ccy,
+        date: t.date, kind, amount: t.amount, balance: t.balance,
+        description: t.desc,
+      });
+      prev = t.balance;
+    }
+  }
+  return txns;
+}
+
+function detectCompany(text){
+  const lines = text.split("\n").slice(0, 30);
+  for(const l of lines){
+    const s = l.trim();
+    if(/^[A-Z0-9 &.,()-]+(LIMITED|LTD)\.?$/.test(s)) return s;
+  }
+  return null;
+}
+
+// ------------------------------------------------------------------
+// 聚合
+// ------------------------------------------------------------------
+function aggregate(txns, start, end){
+  let credits = txns.filter(t => t.kind === "credit");
+  if(start) credits = credits.filter(t => t.date >= start);
+  if(end) credits = credits.filter(t => t.date <= end);
+
+  const currencies = Array.from(new Set(credits.map(t => t.currency))).sort();
+  const monthsSet = new Set(credits.map(t => ymKey(t.date)));
+  const months = Array.from(monthsSet).sort();
+
+  const sumMap = {};
+  const countMap = {};
+  for(const t of credits){
+    const mk = ymKey(t.date);
+    const k = mk + "|" + t.currency;
+    sumMap[k] = (sumMap[k] || 0) + t.amount;
+    countMap[k] = (countMap[k] || 0) + 1;
+  }
+  return {currencies, months, sumMap, countMap, credits};
+}
+
+function fmtMoney(v){
+  if(!v) return "0.00";
+  return v.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtInt(v){
+  return (v||0).toLocaleString("en-US");
+}
+
+// ------------------------------------------------------------------
+// 主流程
+// ------------------------------------------------------------------
+let cached = null; // 保存解析结果供下载
+
+// 把任意输入（PDF、ZIP、xlsx/docx/图片等）展开成一个 PDF 文件数组
+// 返回 {pdfs:[{name,data,parent}], skipped:[{name,reason,parent}]}
+// emit(type, payload): 可选事件回调，用于更新 UI 树
+async function expandToPdfs(files, emit = () => {}){
+  const pdfs = [];
+  const skipped = [];
+  const seen = new Set();
+  function pushPdf(name, data, parent=null){
+    if(seen.has(name)) return;
+    seen.add(name);
+    pdfs.push({name, data, parent});
+  }
+  function classify(filename){
+    const n = filename.toLowerCase();
+    // macOS 元数据 / 隐藏文件
+    const base = filename.split("/").pop();
+    if(base.startsWith(".") || filename.includes("__MACOSX")) return "hidden";
+    if(n.endsWith(".pdf")) return "pdf";
+    if(n.endsWith(".zip")) return "zip";
+    return "other";
+  }
+  async function handleZip(zipFile, parentKey){
+    emit("zip-open", {key: parentKey, name: zipFile.name});
+    let zip;
+    try{
+      zip = await JSZip.loadAsync(await zipFile.arrayBuffer());
+    }catch(e){
+      skipped.push({name: zipFile.name, reason: "压缩包无法读取", parent: parentKey});
+      emit("zip-fail", {key: parentKey, name: zipFile.name});
+      return;
+    }
+    const entries = Object.values(zip.files).filter(e => !e.dir);
+    for(const e of entries){
+      const kind = classify(e.name);
+      const base = e.name.split("/").pop();
+      if(kind === "hidden") continue;
+      if(kind === "pdf"){
+        const data = await e.async("arraybuffer");
+        pushPdf(base, data, parentKey);
+        emit("pdf-found", {parent: parentKey, pdfName: base});
+      } else if(kind === "zip"){
+        // 嵌套 zip：转成 Blob 再递归
+        const inner = await e.async("blob");
+        inner.name = base;
+        const innerKey = parentKey + "/" + base;
+        await handleZip(inner, innerKey);
+      } else {
+        skipped.push({name: e.name, reason: "非 PDF", parent: parentKey});
+        emit("skip", {parent: parentKey, name: base, reason: "非 PDF"});
+      }
+    }
+    emit("zip-done", {key: parentKey});
+  }
+  for(const f of Array.from(files)){
+    const displayName = f.relPath || f.name;
+    const kind = classify(f.name);
+    if(kind === "hidden") continue;
+    if(kind === "pdf"){
+      try{
+        const buf = await f.arrayBuffer();
+        if(!buf || buf.byteLength === 0){
+          skipped.push({name: f.name, reason: "文件为空", parent: null});
+          emit("skip", {parent: null, name: f.name, reason: "空文件"});
+          continue;
+        }
+        pushPdf(f.name, buf, null);
+        emit("pdf-found", {parent: null, pdfName: f.name});
+      }catch(err){
+        console.warn("[expandToPdfs] failed to read PDF:", f.name, err);
+        skipped.push({name: f.name, reason: "读取失败", parent: null});
+        emit("skip", {parent: null, name: f.name, reason: "读取失败"});
+      }
+    } else if(kind === "zip"){
+      try{
+        await handleZip(f, f.name);
+      }catch(err){
+        console.warn("[expandToPdfs] failed to read ZIP:", f.name, err);
+        skipped.push({name: f.name, reason: "压缩包读取失败", parent: null});
+        emit("skip", {parent: null, name: f.name, reason: "ZIP 读取失败"});
+      }
+    } else {
+      skipped.push({name: displayName, reason: "非 PDF", parent: null});
+      emit("skip", {parent: null, name: f.name, reason: "非 PDF"});
+    }
+  }
+  return {pdfs, skipped};
+}
+
+async function handleFiles(files){
+  files = Array.from(files || []);
+  if(!files.length){ showErr("请拖入 PDF 或压缩包"); return; }
+
+  // —— 关键：检测"承诺文件"(WeChat/iCloud/网盘同步中的空壳) ——
+  const emptyFiles = files.filter(f => f.size === 0);
+  if(emptyFiles.length && emptyFiles.length === files.length){
+    SFX.err();
+    showErr(
+      "文件无法读取（可能来自微信传输助手、iCloud、OneDrive 等云同步）。" +
+      "请先：① 在微信里【右键 → 另存为】到桌面，② 或把文件复制到本地文件夹，" +
+      "然后再拖进来。"
+    );
+    return;
+  }
+  if(emptyFiles.length){
+    console.warn("[handleFiles] skipping empty files:", emptyFiles.map(f => f.name));
+    files = files.filter(f => f.size > 0);
+  }
+
+  errEl.style.display = "none";
+  results.style.display = "none";
+  logEl.innerHTML = "";
+  $("#log-wrap").style.display = "none";
+  $("#log-wrap").open = false;
+  treeClear();
+
+  SFX.drop();
+
+  // ——— 事件处理：更新树 ———
+  let foundPdfCount = 0;
+  let skipCount = 0;
+
+  const emit = (type, p={}) => {
+    if(type === "zip-open"){
+      treeAdd(p.key, {icon:"◉", label:p.name, status:"busy", meta:"展开中", indent:0});
+    } else if(type === "zip-done"){
+      treeUpdate(p.key, {status:"ok", icon:"●", meta:""});
+    } else if(type === "zip-fail"){
+      treeUpdate(p.key, {status:"fail", icon:"!", meta:"读取失败"});
+    } else if(type === "pdf-found"){
+      foundPdfCount++;
+      const key = (p.parent ? p.parent + "/" : "") + p.pdfName;
+      treeAdd(key, {parent: p.parent, icon:"○", label:p.pdfName, status:"wait", meta:"等待"});
+      treeCount(0, foundPdfCount);
+    } else if(type === "skip"){
+      skipCount++;
+      const key = (p.parent ? p.parent + "/" : "") + p.name + "#skip" + skipCount;
+      treeAdd(key, {parent: p.parent, icon:"—", label:p.name, status:"skip", meta:"已跳过"});
+    } else if(type === "parse-start"){
+      treeUpdate(p.key, {icon:"◐", status:"busy", meta:"读取中"});
+    } else if(type === "parse-done"){
+      treeUpdate(p.key, {icon:"✓", status:"ok",
+        meta: p.credits ? `${p.txns} 笔 · 进账 ${p.credits}` : `${p.txns} 笔`});
+    } else if(type === "parse-fail"){
+      treeUpdate(p.key, {icon:"✕", status:"fail", meta:"解析失败"});
+    }
+  };
+
+  // —— 步骤 ①：读取 / 解压 ——
+  setState("working", {
+    title: "正在扫描文件",
+    pct: 0.02,
+    progressText: `共 ${files.length} 个输入文件`,
+  });
+  // 顶层输入：如果是单个文件（非 zip）不进 expandToPdfs 的 zip 分支，直接 emit
+  await tick();
+  log(`正在扫描输入…`);
+
+  let pdfs, skipped;
+  try{
+    ({pdfs, skipped} = await expandToPdfs(files, emit));
+  }catch(e){
+    SFX.err();
+    showErr("读取压缩包失败：" + e.message);
+    return;
+  }
+
+  if(skipped.length){
+    log(`  跳过 ${skipped.length} 个非 PDF 文件（Word/Excel/图片等）`, "warn");
+    SFX.skip();
+  }
+  if(!pdfs.length){
+    SFX.err();
+    let msg = "没找到 PDF 文件。";
+    const allReadFails = skipped.length > 0 &&
+      skipped.every(s => s.reason === "读取失败" || s.reason === "文件为空" || s.reason === "压缩包读取失败");
+    if(files.length === 0){
+      msg += "浏览器没收到任何文件（可能是从 iCloud / 网盘 / 微信拖的，请先把文件保存到本地桌面再试）。";
+    } else if(allReadFails){
+      msg += "文件无法读取（来源可能是微信传输助手 / iCloud / 云盘同步中）。请先【右键 → 另存为】保存到本地桌面再拖进来。";
+    } else if(skipped.length){
+      const sample = skipped.slice(0,3).map(s => s.name.split("/").pop()).join("、");
+      msg += `只识别到 ${files.length} 个文件（例：${sample}），都不是 PDF / ZIP。请确认里面有银行月结单 PDF。`;
+    } else {
+      msg += `收到 ${files.length} 个文件，但里面没有 PDF。请把银行下载的月结单 PDF（或包含 PDF 的 ZIP / 文件夹）拖进来。`;
+    }
+    showErr(msg);
+    return;
+  }
+  log(`开始处理 ${pdfs.length} 份 PDF…`);
+
+  // —— 步骤 ②：逐张解析月结单 ——
+  setState("working", {
+    title: "正在读取月结单",
+    pct: 0.1,
+    progressText: `已处理 0 / ${pdfs.length}`,
+  });
+  await tick();
+
+  const allTxns = [];
+  let detectedCompany = null;
+  let okCount = 0, failCount = 0;
+  for(let i=0; i<pdfs.length; i++){
+    const f = pdfs[i];
+    const key = (f.parent ? f.parent + "/" : "") + f.name;
+    emit("parse-start", {key});
+    treeCount(i, pdfs.length);
+    setState("working", {
+      title: "正在读取月结单",
+      pct: 0.1 + ((i+0.5) / pdfs.length) * 0.8,
+      progressText: `第 ${i+1} / ${pdfs.length} 张 · ${f.name}`,
+    });
+    await tick();
+    try{
+      const text = await extractPdfText(f.data);
+      if(!detectedCompany) detectedCompany = detectCompany(text);
+      const txns = parseStatement(text, f.name);
+      const cred = txns.filter(t => t.kind === "credit").length;
+      allTxns.push(...txns);
+      okCount++;
+      emit("parse-done", {key, txns: txns.length, credits: cred});
+      SFX.pdfDone();
+      log(`  ✓ ${f.name} — ${txns.length} 笔 (进账 ${cred})`, "ok");
+    }catch(e){
+      failCount++;
+      emit("parse-fail", {key});
+      log(`  ✗ ${f.name} — 解析失败: ${e.message}`, "err");
+      console.error(e);
+    }
+    treeCount(i+1, pdfs.length);
+  }
+
+  if(!allTxns.length){
+    SFX.err();
+    showErr("未能从这些 PDF 里解析出任何交易。请确认它们是 DBS 星展银行的综合月结单（不是发票、章程等其他 PDF）。");
+    return;
+  }
+
+  // —— 步骤 ③：汇总并渲染 ——
+  setState("working", {
+    title: "正在汇总",
+    pct: 0.97,
+    progressText: `按月份与币种合并，折算 HKD`,
+  });
+  await tick();
+
+  const opts = getOptions();
+  const agg = aggregate(allTxns, opts.start, opts.end);
+  cached = {allTxns, agg, opts, company: opts.company || detectedCompany || "（未识别公司名）"};
+
+  // 计算合计 HKD
+  let totalHKD = 0;
+  for(const m of agg.months){
+    for(const c of agg.currencies){
+      totalHKD += (agg.sumMap[m+"|"+c] || 0) * (opts.rates[c] || 0);
+    }
+  }
+
+  renderResults();
+  log(`\n完成。共 ${allTxns.length} 笔交易，其中进账 ${agg.credits.length} 笔。`, "ok");
+
+  // —— 步骤 ④：完成 ——
+  const doneChips = [
+    {type:"ok", text:`${agg.credits.length} 笔进账`},
+    {type:"ok", text:`${agg.months.length} 个月`},
+    {type:"ok", text:`HKD ${fmtMoney(totalHKD)}`},
+  ];
+  if(failCount) doneChips.push({type:"err", text:`${failCount} 份解析失败`});
+  if(skipped.length) doneChips.push({type:"warn", text:`${skipped.length} 个非月结单已跳过`});
+
+  setState("done", {
+    title: "解析完成",
+    sub: cached.company,
+    chips: doneChips,
+  });
+  SFX.allDone();
+}
+
+function getOptions(){
+  const rates = {};
+  ["USD","EUR","JPY","CNY","SGD","GBP","AUD"].forEach(c => {
+    const v = parseFloat($("#rate-"+c).value);
+    if(v>0) rates[c] = v;
+  });
+  rates.HKD = 1;
+  const s = $("#opt-start").value;
+  const e = $("#opt-end").value;
+  return {
+    company: $("#opt-company").value.trim(),
+    start: s ? new Date(s) : null,
+    end: e ? new Date(e+"T23:59:59") : null,
+    rates,
+  };
+}
+
+function renderResults(){
+  const {agg, opts} = cached;
+  const {currencies, months, sumMap, countMap, credits} = agg;
+
+  // 顶部大数
+  let totalHKD = 0, totalCount = credits.length;
+  const filesSet = new Set(cached.allTxns.map(t => t.sourceFile));
+  for(const m of months){
+    for(const c of currencies){
+      const s = sumMap[m+"|"+c] || 0;
+      totalHKD += s * (opts.rates[c] || 0);
+    }
+  }
+  $("#s-count").textContent = fmtInt(totalCount);
+  $("#s-hkd").textContent = fmtMoney(totalHKD);
+  $("#s-months").textContent = months.length + " 个月";
+  $("#s-files").textContent = filesSet.size;
+
+  // 预览表格
+  const tbl = $("#preview");
+  let thead = "<tr><th>月份</th>";
+  for(const c of currencies) thead += `<th>${c} 进账</th>`;
+  thead += "<th>进账笔数</th><th>折合 HKD</th></tr>";
+
+  let tbody = "";
+  const totByCcy = {}; currencies.forEach(c => totByCcy[c] = 0);
+  let totCnt = 0, totHkd = 0;
+  for(const m of months){
+    let rowCnt = 0, rowHkd = 0;
+    let tr = `<tr><td>${m}</td>`;
+    for(const c of currencies){
+      const s = sumMap[m+"|"+c] || 0;
+      const n = countMap[m+"|"+c] || 0;
+      tr += `<td>${s? fmtMoney(s) : "—"}</td>`;
+      totByCcy[c] += s;
+      rowCnt += n;
+      rowHkd += s * (opts.rates[c] || 0);
+    }
+    tr += `<td>${rowCnt || "—"}</td><td>${rowHkd? fmtMoney(rowHkd) : "—"}</td></tr>`;
+    tbody += tr;
+    totCnt += rowCnt;
+    totHkd += rowHkd;
+  }
+  let totRow = `<tr class="total"><td>合计</td>`;
+  for(const c of currencies) totRow += `<td>${fmtMoney(totByCcy[c])}</td>`;
+  totRow += `<td>${fmtInt(totCnt)}</td><td>${fmtMoney(totHkd)}</td></tr>`;
+  let rateRow = `<tr class="empty"><td>汇率→HKD</td>`;
+  for(const c of currencies) rateRow += `<td>${opts.rates[c] || "-"}</td>`;
+  rateRow += `<td>—</td><td>1.0</td></tr>`;
+
+  tbl.innerHTML = thead + tbody + totRow + rateRow;
+  results.style.display = "block";
+  results.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+// ------------------------------------------------------------------
+// Excel 下载
+// ------------------------------------------------------------------
+$("#download").addEventListener("click", () => {
+  if(!cached) return;
+  const wb = XLSX.utils.book_new();
+  const {agg, opts, company, allTxns} = cached;
+  const {currencies, months, sumMap, countMap, credits} = agg;
+
+  // Sheet 1: 进账汇总
+  const s1 = [];
+  s1.push([company]);
+  s1.push(["账期: " + (opts.start? fmtD(opts.start):"—") + " ~ " + (opts.end? fmtD(opts.end):"—")]);
+  s1.push([`仅统计进账 (Credit)；共 ${new Set(allTxns.map(t=>t.sourceFile)).size} 份月结单`]);
+  s1.push([]);
+  const hdr = ["月份", ...currencies.map(c => c+" 进账金额"), "进账笔数", "折合 HKD"];
+  s1.push(hdr);
+  const totByCcy = {}; currencies.forEach(c=> totByCcy[c] = 0);
+  let totCnt = 0, totHkd = 0;
+  for(const m of months){
+    const row = [m];
+    let rowCnt = 0, rowHkd = 0;
+    for(const c of currencies){
+      const v = sumMap[m+"|"+c] || 0;
+      const n = countMap[m+"|"+c] || 0;
+      row.push(v ? +v.toFixed(2) : 0);
+      totByCcy[c] += v;
+      rowCnt += n;
+      rowHkd += v * (opts.rates[c] || 0);
+    }
+    row.push(rowCnt);
+    row.push(+rowHkd.toFixed(2));
+    s1.push(row);
+    totCnt += rowCnt;
+    totHkd += rowHkd;
+  }
+  s1.push(["合计", ...currencies.map(c => +totByCcy[c].toFixed(2)), totCnt, +totHkd.toFixed(2)]);
+  s1.push([]);
+  s1.push(["汇率→HKD", ...currencies.map(c => opts.rates[c] || 0)]);
+
+  const ws1 = XLSX.utils.aoa_to_sheet(s1);
+  ws1["!cols"] = [{wch:14}, ...currencies.map(()=>({wch:18})), {wch:12}, {wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws1, "进账汇总");
+
+  // Sheet 2: 进账明细
+  const s2 = [["日期","月份","账号","币种","金额","交易后余额","摘要/对手方","源文件"]];
+  const creditsSorted = credits.slice().sort((a,b)=> a.date-b.date);
+  for(const t of creditsSorted){
+    s2.push([
+      fmtD(t.date), ymKey(t.date), t.accountNo, t.currency,
+      +t.amount.toFixed(2), +t.balance.toFixed(2),
+      t.description, t.sourceFile,
+    ]);
+  }
+  const ws2 = XLSX.utils.aoa_to_sheet(s2);
+  ws2["!cols"] = [{wch:12},{wch:10},{wch:22},{wch:8},{wch:16},{wch:16},{wch:60},{wch:22}];
+  XLSX.utils.book_append_sheet(wb, ws2, "进账明细");
+
+  // Sheet 3: 全部交易
+  const s3 = [["日期","账号","币种","方向","金额","交易后余额","摘要","源文件"]];
+  const allSorted = allTxns.slice().filter(t =>
+    (!opts.start || t.date >= opts.start) && (!opts.end || t.date <= opts.end)
+  ).sort((a,b) => a.date - b.date);
+  for(const t of allSorted){
+    s3.push([
+      fmtD(t.date), t.accountNo, t.currency,
+      t.kind === "credit" ? "进账" : "支出",
+      +t.amount.toFixed(2), +t.balance.toFixed(2),
+      t.description, t.sourceFile,
+    ]);
+  }
+  const ws3 = XLSX.utils.aoa_to_sheet(s3);
+  ws3["!cols"] = [{wch:12},{wch:22},{wch:8},{wch:8},{wch:16},{wch:16},{wch:60},{wch:22}];
+  XLSX.utils.book_append_sheet(wb, ws3, "全部交易");
+
+  // Sheet 4: 源文件
+  const s4 = [["源文件","覆盖月份","进账笔数","出账笔数"]];
+  const byFile = {};
+  for(const t of allTxns){
+    if(!byFile[t.sourceFile]) byFile[t.sourceFile] = {months:new Set(), cred:0, deb:0};
+    byFile[t.sourceFile].months.add(ymKey(t.date));
+    if(t.kind === "credit") byFile[t.sourceFile].cred++;
+    else byFile[t.sourceFile].deb++;
+  }
+  for(const fn of Object.keys(byFile).sort()){
+    const b = byFile[fn];
+    s4.push([fn, Array.from(b.months).sort().join(", "), b.cred, b.deb]);
+  }
+  const ws4 = XLSX.utils.aoa_to_sheet(s4);
+  ws4["!cols"] = [{wch:42},{wch:24},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws4, "源文件");
+
+  const safe = (company || "客户").replace(/[\\/:*?"<>|]+/g,"").trim();
+  XLSX.writeFile(wb, `进账流水统计-${safe}.xlsx`);
+});
+
+function fmtD(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${dd}`;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# 测试 / 调试文件
+test-*.zip
+test-*.xlsx
+test-*.docx
+test-*.pdf
+test-folder/
+/tmp/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# 备份
+*.bak
+*.backup
+*-backup*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# 凭据 · 绝对不能进仓库
+.env
+.env.*
+*credentials*
+*token*
+*.pem
+*.key
+
+# 本地生成的 Excel 报表（客户实际跑出来的数据不要提交）
+进账流水统计-*.xlsx
