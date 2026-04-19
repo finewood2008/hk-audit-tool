@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>银行流水工具 · 产品调研问卷</title>
+<meta name="description" content="香港公司做账审计用的银行流水统计工具 — 面向财税同行的 15 分钟产品调研">
+<meta name="robots" content="noindex,nofollow">
+<meta property="og:title" content="银行流水工具 · 产品调研问卷">
+<meta property="og:description" content="15 分钟问卷 · 答完直接生成汇总 · 截图发我即可">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.86em' font-size='92'%3E📋%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#faf9f5; --card:#ffffff; --card-soft:#f4efe6; --ink:#1f1f1f; --ink-2:#2d2d2d;
+    --muted:#64615c; --muted-2:#8a857e; --line:#e8e4d9; --line-soft:#efeae0;
+    --accent:#cc785c; --accent-hover:#b8654c; --accent-soft:#f5e5dd;
+    --ok:#5a7a4e; --ok-soft:#e8eee0;
+    --serif: "Fraunces", "Tiempos Headline", "Noto Serif SC", Georgia, "Songti SC", serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:var(--sans);font-size:15px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+  .wrap{max-width:760px;margin:0 auto;padding:56px 24px 80px;}
+
+  header{margin-bottom:36px}
+  h1{font-family:var(--serif);font-size:34px;margin:0 0 10px;color:var(--ink);
+    font-weight:500;letter-spacing:-0.01em;line-height:1.2}
+  h1 .highlight{color:var(--accent);font-style:italic}
+  header .sub{color:var(--muted);font-size:15px;margin-bottom:20px}
+  header .intro{background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:18px 22px;color:var(--ink-2);font-size:14px;line-height:1.8}
+  header .intro p{margin:0 0 8px}
+  header .intro p:last-child{margin-bottom:0}
+
+  .section-title{font-family:var(--serif);font-size:20px;font-weight:500;color:var(--accent);
+    margin:40px 0 16px;letter-spacing:-0.005em}
+  .section-title::before{content:"◉ "}
+
+  .q{background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:22px 24px;margin-bottom:16px;transition:border-color .2s}
+  .q:focus-within{border-color:var(--accent)}
+  .q-title{font-family:var(--serif);font-size:17px;font-weight:500;color:var(--ink);
+    margin:0 0 6px;line-height:1.4;letter-spacing:-0.005em}
+  .q-num{color:var(--accent);font-weight:500;margin-right:6px}
+  .q-hint{color:var(--muted);font-size:13px;line-height:1.75;margin-bottom:14px;font-style:italic}
+
+  /* Radio / checkbox */
+  .opt{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;margin:0 -10px;
+    border-radius:6px;cursor:pointer;transition:background .1s}
+  .opt:hover{background:var(--card-soft)}
+  .opt input{margin:3px 0 0 0;accent-color:var(--accent);flex-shrink:0;cursor:pointer}
+  .opt .lab{flex:1;font-size:14px;color:var(--ink-2)}
+  .opt .rank{display:inline-block;width:50px;margin-left:8px;padding:2px 6px;
+    border:1px solid var(--line);border-radius:4px;font-size:13px;text-align:center;
+    background:var(--card-soft)}
+
+  textarea, .text-input{width:100%;padding:10px 12px;border:1px solid var(--line);
+    border-radius:6px;font-size:14px;background:var(--card);color:var(--ink);
+    font-family:var(--sans);resize:vertical;transition:border-color .15s;line-height:1.6}
+  textarea{min-height:80px}
+  textarea:focus, .text-input:focus{outline:none;border-color:var(--accent)}
+  .inline-fill{margin-top:12px}
+  .inline-fill .lab{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+
+  /* 按钮 */
+  .actions{margin-top:32px;display:flex;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:8px;
+    background:var(--accent);color:#fff;border:1px solid transparent;
+    padding:12px 22px;font-size:15px;font-weight:500;font-family:var(--sans);
+    border-radius:6px;cursor:pointer;transition:background .15s, transform .1s}
+  .btn:hover{background:var(--accent-hover)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .btn.ghost:hover{background:var(--card-soft);border-color:var(--muted-2)}
+
+  /* 答案汇总 */
+  #summary{display:none;margin-top:40px;background:var(--card);
+    border:1px solid var(--ok);border-radius:10px;padding:26px 28px;
+    box-shadow:0 4px 24px rgba(90,122,78,0.12)}
+  #summary h2{font-family:var(--serif);font-size:24px;color:var(--ok);
+    margin:0 0 6px;font-weight:500;letter-spacing:-0.01em}
+  #summary h2::before{content:"✓ ";font-style:normal}
+  #summary .meta{color:var(--muted);font-size:13px;margin-bottom:20px}
+  #summary pre{background:var(--card-soft);border:1px solid var(--line);
+    border-radius:6px;padding:16px 20px;margin:0;white-space:pre-wrap;
+    word-break:break-word;font-family:var(--mono);font-size:12.5px;
+    line-height:1.85;color:var(--ink-2);max-height:500px;overflow:auto}
+  #summary .tips{margin-top:18px;padding:12px 14px;background:var(--accent-soft);
+    border-left:3px solid var(--accent);font-size:13.5px;color:var(--ink-2);
+    border-radius:4px;line-height:1.8}
+
+  /* Footer */
+  footer{color:var(--muted);font-size:13px;margin-top:40px;text-align:center;line-height:1.9}
+  footer .serif{font-family:var(--serif);font-style:italic;color:var(--accent)}
+
+  hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+
+  /* 通知 */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:12px 22px;border-radius:99px;
+    font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.2);
+    opacity:0;pointer-events:none;transition:opacity .2s;z-index:100}
+  .toast.show{opacity:1}
+
+  @media (max-width:560px){
+    .wrap{padding:32px 18px 60px}
+    h1{font-size:26px}
+    .q{padding:18px 18px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>银行流水工具 <span class="highlight">产品调研</span></h1>
+    <div class="sub">致：财税同行朋友 · 预计 15 分钟</div>
+    <div class="intro">
+      <p>兄弟，打扰一下。我最近做了个帮香港公司做账审计用的银行流水统计工具，你帮我看过的那份 Miheng 的 Excel 就是它跑出来的。</p>
+      <p>工具本身基本能用了，但我想把它做得更贴近你们日常真实用得到的样子 —— 你正好是最懂我们这行怎么干活的人。</p>
+      <p>这 15 题都是问你的真实流程，不是客套话。答完直接点「生成汇总」，截图发我就行。谢谢 🙏</p>
+    </div>
+  </header>
+
+  <form id="survey">
+
+  <div class="section-title">Part 1 · 你平时怎么干活</div>
+
+  <!-- Q1 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q1</span>你们公司每年大概接多少单香港公司做账审计？</div>
+    <div class="q-hint">（1-5 单 vs 100+ 单对工具需求完全不同）</div>
+    <label class="opt"><input type="radio" name="q1" value="1-5 单（刚起步 / 兼职做）"><span class="lab">1 - 5 单（刚起步 / 兼职做）</span></label>
+    <label class="opt"><input type="radio" name="q1" value="6-20 单（专业做，但小团队）"><span class="lab">6 - 20 单（专业做，但小团队）</span></label>
+    <label class="opt"><input type="radio" name="q1" value="21-50 单（中等规模）"><span class="lab">21 - 50 单（中等规模）</span></label>
+    <label class="opt"><input type="radio" name="q1" value="51-100 单"><span class="lab">51 - 100 单</span></label>
+    <label class="opt"><input type="radio" name="q1" value="100 单以上"><span class="lab">100 单以上</span></label>
+  </div>
+
+  <!-- Q2 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q2</span>一单的平均处理周期多久？瓶颈在哪一步？</div>
+    <div class="q-hint">（例：拿到流水 → 出报价 1 天、做账 5 天、审计 3 天；瓶颈是不是等客户补资料 / 手工对凭证？）</div>
+    <textarea name="q2" placeholder="尽量具体一点，比如「一单大概 7-10 天，最卡的是客户给资料慢」"></textarea>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q3</span>你们一单的收费结构大致怎么算？</div>
+    <div class="q-hint">（不用说具体数字，只是想了解报价逻辑。多选）</div>
+    <label class="opt"><input type="checkbox" name="q3" value="打包价 · 按公司规模档位（小 / 中 / 大）"><span class="lab">打包价 · 按公司规模档位（小 / 中 / 大）</span></label>
+    <label class="opt"><input type="checkbox" name="q3" value="按营业额区间定价"><span class="lab">按营业额区间定价</span></label>
+    <label class="opt"><input type="checkbox" name="q3" value="按银行账户数 × 单价"><span class="lab">按银行账户数 × 单价</span></label>
+    <label class="opt"><input type="checkbox" name="q3" value="按月结单张数 / 交易笔数"><span class="lab">按月结单张数 / 交易笔数</span></label>
+    <label class="opt"><input type="checkbox" name="q3" value="离岸豁免申请另算"><span class="lab">离岸豁免申请另算</span></label>
+    <label class="opt"><input type="checkbox" name="q3" value="关联方交易另算"><span class="lab">关联方交易另算</span></label>
+    <div class="inline-fill">
+      <span class="lab">其他 / 补充：</span>
+      <textarea name="q3_other" placeholder="（可以写个大致区间，如「小型公司 4000 港币起、大型 15000+」等）"></textarea>
+    </div>
+  </div>
+
+  <div class="section-title">Part 2 · 银行 / 工具场景</div>
+
+  <!-- Q4 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q4</span>你们客户最常用哪几家银行？按占比排序</div>
+    <div class="q-hint">（决定我下一步适配哪家银行。前三名即可，1 = 最多。后面不用填）</div>
+    <label class="opt"><input type="checkbox" name="q4" value="DBS 星展"><span class="lab">DBS 星展</span><input class="rank" type="text" name="q4_rank_DBS" placeholder="排名"></label>
+    <label class="opt"><input type="checkbox" name="q4" value="HSBC 汇丰"><span class="lab">HSBC 汇丰</span><input class="rank" type="text" name="q4_rank_HSBC" placeholder="排名"></label>
+    <label class="opt"><input type="checkbox" name="q4" value="Hang Seng 恒生"><span class="lab">Hang Seng 恒生</span><input class="rank" type="text" name="q4_rank_HS" placeholder="排名"></label>
+    <label class="opt"><input type="checkbox" name="q4" value="BOC HK 中银香港"><span class="lab">BOC HK 中银香港</span><input class="rank" type="text" name="q4_rank_BOC" placeholder="排名"></label>
+    <label class="opt"><input type="checkbox" name="q4" value="招行永隆 / 工银亚洲"><span class="lab">招行永隆 / 工银亚洲</span><input class="rank" type="text" name="q4_rank_CMB" placeholder="排名"></label>
+    <label class="opt"><input type="checkbox" name="q4" value="Wise"><span class="lab">Wise</span><input class="rank" type="text" name="q4_rank_Wise" placeholder="排名"></label>
+    <label class="opt"><input type="checkbox" name="q4" value="Airwallex"><span class="lab">Airwallex</span><input class="rank" type="text" name="q4_rank_Air" placeholder="排名"></label>
+    <label class="opt"><input type="checkbox" name="q4" value="PingPong"><span class="lab">PingPong</span><input class="rank" type="text" name="q4_rank_PP" placeholder="排名"></label>
+    <label class="opt"><input type="checkbox" name="q4" value="XTransfer"><span class="lab">XTransfer</span><input class="rank" type="text" name="q4_rank_XT" placeholder="排名"></label>
+    <label class="opt"><input type="checkbox" name="q4" value="Standard Chartered 渣打"><span class="lab">Standard Chartered 渣打</span><input class="rank" type="text" name="q4_rank_SC" placeholder="排名"></label>
+  </div>
+
+  <!-- Q5 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q5</span>客户给你的流水资料，最常见格式是什么？</div>
+    <div class="q-hint">（决定工具该支持哪些输入。多选）</div>
+    <label class="opt"><input type="checkbox" name="q5" value="银行网银下载的原版 PDF（字能选中复制）"><span class="lab">银行网银下载的原版 PDF（字能选中复制）</span></label>
+    <label class="opt"><input type="checkbox" name="q5" value="手机 App 截图 / 屏幕截图"><span class="lab">手机 App 截图 / 屏幕截图</span></label>
+    <label class="opt"><input type="checkbox" name="q5" value="实体月结单扫描件（图片 PDF）"><span class="lab">实体月结单扫描件（图片 PDF，字不能复制）</span></label>
+    <label class="opt"><input type="checkbox" name="q5" value="客户自己用 Excel 手工整理的流水表"><span class="lab">客户自己用 Excel 手工整理的流水表</span></label>
+    <label class="opt"><input type="checkbox" name="q5" value="多种格式混在一起"><span class="lab">多种格式混在一起</span></label>
+  </div>
+
+  <!-- Q6 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q6</span>「统计进账」这步你们目前怎么做？</div>
+    <div class="q-hint">（决定我的工具到底在替代什么步骤。多选）</div>
+    <label class="opt"><input type="checkbox" name="q6" value="纯手工敲 Excel（看一眼 PDF 写一笔）"><span class="lab">纯手工敲 Excel（看一眼 PDF 写一笔）</span></label>
+    <label class="opt"><input type="checkbox" name="q6" value="有一套自制的 Excel 模板（公式 / 汇率自动算）"><span class="lab">有一套自制的 Excel 模板（公式 / 汇率自动算）</span></label>
+    <label class="opt"><input type="checkbox" name="q6" value="让实习生 / 助理录入"><span class="lab">让实习生 / 助理录入</span></label>
+    <label class="opt"><input type="checkbox" name="q6" value="外包给印度 / 菲律宾处理"><span class="lab">外包给印度 / 菲律宾处理</span></label>
+    <label class="opt"><input type="checkbox" name="q6" value="已经在用某个软件"><span class="lab">已经在用某个软件</span></label>
+    <label class="opt"><input type="checkbox" name="q6" value="我现在没好办法"><span class="lab">我现在没好办法</span></label>
+    <div class="inline-fill">
+      <span class="lab">如果在用软件，叫什么：</span>
+      <input class="text-input" name="q6_software" placeholder="可留空">
+    </div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q7</span>如果一个工具能把 15 单银行流水统计从 2 天压到 2 小时，你愿意付多少钱用？</div>
+    <div class="q-hint">（写心里价位即可。不用客气）</div>
+    <label class="opt"><input type="radio" name="q7" value="月订阅 300 RMB 以内"><span class="lab">月订阅 300 RMB 以内</span></label>
+    <label class="opt"><input type="radio" name="q7" value="月订阅 300-800 RMB"><span class="lab">月订阅 300 - 800 RMB</span></label>
+    <label class="opt"><input type="radio" name="q7" value="月订阅 800-2000 RMB"><span class="lab">月订阅 800 - 2000 RMB</span></label>
+    <label class="opt"><input type="radio" name="q7" value="按单 · 20 RMB / 公司"><span class="lab">按单 · 20 RMB / 公司</span></label>
+    <label class="opt"><input type="radio" name="q7" value="按单 · 50 RMB / 公司"><span class="lab">按单 · 50 RMB / 公司</span></label>
+    <label class="opt"><input type="radio" name="q7" value="按单 · 100 RMB / 公司"><span class="lab">按单 · 100 RMB / 公司</span></label>
+    <label class="opt"><input type="radio" name="q7" value="一次性买断 2000 RMB 以内"><span class="lab">一次性买断 · 2000 RMB 以内</span></label>
+    <label class="opt"><input type="radio" name="q7" value="一次性买断 2000-8000 RMB"><span class="lab">一次性买断 · 2000 - 8000 RMB</span></label>
+    <div class="inline-fill">
+      <span class="lab">补充 / 你的理由：</span>
+      <textarea name="q7_why" placeholder="（比如「我倾向一次性，不喜欢长期订阅」或「得看多少个账号」）"></textarea>
+    </div>
+  </div>
+
+  <div class="section-title">Part 3 · 关于 Miheng 这一单</div>
+
+  <!-- Q8 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q8</span>工具跑出来的 <b>115 笔进账 / HKD 40,865,784.93 / 13 个月</b>，和你心里印象能对上吗？</div>
+    <div class="q-hint">（凭感觉说即可，不用真去核对每笔）</div>
+    <label class="opt"><input type="radio" name="q8" value="差不多，能对上"><span class="lab">差不多，能对上</span></label>
+    <label class="opt"><input type="radio" name="q8" value="笔数对，金额看着偏高 / 偏低"><span class="lab">笔数对，金额看着偏高 / 偏低</span></label>
+    <label class="opt"><input type="radio" name="q8" value="金额对，笔数看着不对"><span class="lab">金额对，笔数看着不对</span></label>
+    <label class="opt"><input type="radio" name="q8" value="都对不上，明显不对"><span class="lab">都对不上，明显不对</span></label>
+  </div>
+
+  <!-- Q9 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q9</span>审计期是 2024-07-23 至 2025-12-31，但 <b>2024 年 7-11 月</b>这 5 个月的月结单我手上没有。为什么？</div>
+    <div class="q-hint">（这个必须确认，不然审计做不完整）</div>
+    <label class="opt"><input type="radio" name="q9" value="期间完全无交易（公司刚成立还没开始运营）"><span class="lab">期间完全无交易（公司刚成立还没开始运营）· 我让客户出书面声明</span></label>
+    <label class="opt"><input type="radio" name="q9" value="月结单客户还没发全"><span class="lab">月结单客户还没发全 · 我去补</span></label>
+    <label class="opt"><input type="radio" name="q9" value="其实有别的账户开了 · DBS 之前没用"><span class="lab">其实有别的账户开了，DBS 之前没用</span></label>
+    <label class="opt"><input type="radio" name="q9" value="不确定，我得去问客户"><span class="lab">不确定，我得去问客户</span></label>
+  </div>
+
+  <!-- Q10 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q10</span>Miheng 除了这两个 DBS 账户（555888 / 557688），还有没有其他银行 / 支付平台账户？</div>
+    <div class="q-hint">（看流水里 PingPong、XTransfer 频繁出现，八成 Miheng 自己也有这些钱包账户。多选）</div>
+    <label class="opt"><input type="checkbox" name="q10" value="确认：只有这两个 DBS 账户"><span class="lab">确认：只有这两个 DBS 账户</span></label>
+    <label class="opt"><input type="checkbox" name="q10" value="还有 Wise 账户"><span class="lab">还有 Wise 账户 —— 月结单我能拿到</span></label>
+    <label class="opt"><input type="checkbox" name="q10" value="还有 Airwallex 账户"><span class="lab">还有 Airwallex 账户</span></label>
+    <label class="opt"><input type="checkbox" name="q10" value="还有 PingPong 钱包"><span class="lab">还有 PingPong 钱包（不是网关，是他自己余额账户）</span></label>
+    <label class="opt"><input type="checkbox" name="q10" value="还有 XTransfer 钱包"><span class="lab">还有 XTransfer 钱包</span></label>
+    <label class="opt"><input type="checkbox" name="q10" value="还有其他香港本地银行"><span class="lab">还有其他香港本地银行（HSBC、恒生等）</span></label>
+    <label class="opt"><input type="checkbox" name="q10" value="还有内地公司账户"><span class="lab">还有内地公司账户（公对公进出）</span></label>
+  </div>
+
+  <!-- Q11 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q11</span>之前那份手工流水 Excel 里有 2 处跟 PDF 对不上（USD 22,852 应为 22,825；HKD 0.23 应为 2.34）。这份表是谁做的？</div>
+    <div class="q-hint">（不是甩锅，是想知道这类错误的源头便于以后避免）</div>
+    <label class="opt"><input type="radio" name="q11" value="我们公司的会计手工录入"><span class="lab">我们公司的会计手工录入的</span></label>
+    <label class="opt"><input type="radio" name="q11" value="客户自己做的，发给我们参考"><span class="lab">客户自己做的，发给我们参考</span></label>
+    <label class="opt"><input type="radio" name="q11" value="实习生做的"><span class="lab">实习生做的</span></label>
+    <label class="opt"><input type="radio" name="q11" value="上一家事务所做的，我们接手后继承"><span class="lab">上一家事务所做的，我们接手后继承</span></label>
+    <label class="opt"><input type="radio" name="q11" value="不记得了"><span class="lab">不记得了</span></label>
+  </div>
+
+  <div class="section-title">Part 4 · 对工具的期望</div>
+
+  <!-- Q12 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q12</span>工具目前只输出 Excel。你拿到 Excel <b>下一步</b>是做什么？</div>
+    <div class="q-hint">（是手敲进财务系统、做凭证、给客户看？如果能把这步也自动化，价值更大）</div>
+    <textarea name="q12" placeholder="越具体越好，比如「丢给同事手敲进 UBS 系统做记账凭证，大概要一整天」"></textarea>
+  </div>
+
+  <!-- Q13 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q13</span>除了「进账统计」，你还希望工具能干什么？</div>
+    <div class="q-hint">（脑暴题，多选 + 补充）</div>
+    <label class="opt"><input type="checkbox" name="q13" value="支出按会计科目自动分类"><span class="lab">支出按会计科目自动分类（办公 / 工资 / 外购）</span></label>
+    <label class="opt"><input type="checkbox" name="q13" value="生成 N/D/M 类分类表"><span class="lab">生成符合香港税表的 N 类 / D 类 / M 类 分类表</span></label>
+    <label class="opt"><input type="checkbox" name="q13" value="一键生成利得税计算表"><span class="lab">一键生成利得税计算表</span></label>
+    <label class="opt"><input type="checkbox" name="q13" value="辅助判断离岸豁免"><span class="lab">辅助判断离岸豁免成立性（拉海外对手方占比）</span></label>
+    <label class="opt"><input type="checkbox" name="q13" value="关联方识别"><span class="lab">关联方识别（股东 / 董事名下公司自动标红）</span></label>
+    <label class="opt"><input type="checkbox" name="q13" value="自动匹配发票 ↔ 银行流水"><span class="lab">自动匹配发票 ↔ 银行流水（对凭证）</span></label>
+    <label class="opt"><input type="checkbox" name="q13" value="生成审计底稿标准套件"><span class="lab">生成审计底稿标准套件</span></label>
+    <div class="inline-fill">
+      <span class="lab">其他想法：</span>
+      <textarea name="q13_other" placeholder="（天马行空都行）"></textarea>
+    </div>
+  </div>
+
+  <!-- Q14 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q14</span>目前是离线版（双击 HTML 在本机跑）。改成网页版 + 团队协作你愿意多付钱吗？</div>
+    <div class="q-hint">（影响要不要做服务器端 + 团队账号）</div>
+    <label class="opt"><input type="radio" name="q14" value="愿意按账号数付费"><span class="lab">愿意，公司付费，按账号数算</span></label>
+    <label class="opt"><input type="radio" name="q14" value="愿意按公司数 / 月结单数算"><span class="lab">愿意，但最好按公司数 / 月结单数算，不按人头</span></label>
+    <label class="opt"><input type="radio" name="q14" value="不愿意，就要离线版"><span class="lab">不愿意，就要离线版 · 客户资料上云让人紧张</span></label>
+    <label class="opt"><input type="radio" name="q14" value="无所谓"><span class="lab">无所谓，看功能</span></label>
+  </div>
+
+  <!-- Q15 -->
+  <div class="q">
+    <div class="q-title"><span class="q-num">Q15</span>最后 · 还有啥想说的？</div>
+    <div class="q-hint">（吐槽、点子、对产品的建议、找我喝酒的时间...都行）</div>
+    <textarea name="q15" placeholder="随便写，空着也行" style="min-height:120px"></textarea>
+  </div>
+
+  <!-- 填答人 -->
+  <div class="q" style="background:var(--card-soft)">
+    <div class="q-title"><span class="q-num">◆</span>你是谁？</div>
+    <div class="q-hint">（方便我后续追问 · 选填）</div>
+    <input class="text-input" name="who" placeholder="你的名字 / 公司 / 微信号（随便写，空着也行）">
+  </div>
+
+  <div class="actions">
+    <button type="button" class="btn" id="submit">生成答案汇总</button>
+    <button type="button" class="btn ghost" id="clear">清空重填</button>
+  </div>
+
+  </form>
+
+  <!-- 答案汇总区 -->
+  <section id="summary">
+    <h2>填写完成</h2>
+    <div class="meta" id="summary-meta">生成时间：—</div>
+    <pre id="summary-text"></pre>
+    <div class="actions">
+      <button type="button" class="btn" id="copy">📋 复制全部内容</button>
+      <button type="button" class="btn ghost" id="download">💾 下载为 .txt</button>
+    </div>
+    <div class="tips">
+      把上方框里内容<b>复制</b>后直接粘贴在微信发我就行 · 或者点「下载为 .txt」把文件传给我 · 再次感谢 🙏
+    </div>
+  </section>
+
+  <footer>
+    <span class="serif">纯本机填写</span> · 所有答案只在浏览器里生成，不会自动上传任何服务器
+    <br>v1.0 · 2026-04
+  </footer>
+</div>
+
+<div class="toast" id="toast">已复制到剪贴板</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const form = $("#survey");
+const summary = $("#summary");
+const summaryText = $("#summary-text");
+const summaryMeta = $("#summary-meta");
+
+// 问题配置：题号 → 标题（用于生成汇总文本）
+const Q = [
+  { num: "Q1",  title: "每年接多少单", name: "q1", type: "radio" },
+  { num: "Q2",  title: "平均处理周期 & 瓶颈", name: "q2", type: "text" },
+  { num: "Q3",  title: "收费结构", name: "q3", type: "checkbox", extra: "q3_other" },
+  { num: "Q4",  title: "客户最常用的银行（按占比排序）", name: "q4", type: "checkbox-rank", rankPrefix: "q4_rank_" },
+  { num: "Q5",  title: "客户流水资料格式", name: "q5", type: "checkbox" },
+  { num: "Q6",  title: "目前怎么统计进账", name: "q6", type: "checkbox", extra: "q6_software", extraLabel: "在用的软件" },
+  { num: "Q7",  title: "付费意愿", name: "q7", type: "radio", extra: "q7_why", extraLabel: "补充 / 理由" },
+  { num: "Q8",  title: "数据和印象能对上吗", name: "q8", type: "radio" },
+  { num: "Q9",  title: "2024-07~11 月月结单缺失原因", name: "q9", type: "radio" },
+  { num: "Q10", title: "Miheng 其他银行 / 支付账户", name: "q10", type: "checkbox" },
+  { num: "Q11", title: "手工 Excel 录错是谁做的", name: "q11", type: "radio" },
+  { num: "Q12", title: "拿到 Excel 下一步做什么", name: "q12", type: "text" },
+  { num: "Q13", title: "还希望工具能干什么", name: "q13", type: "checkbox", extra: "q13_other", extraLabel: "其他想法" },
+  { num: "Q14", title: "愿意为团队版付费吗", name: "q14", type: "radio" },
+  { num: "Q15", title: "还有啥想说的", name: "q15", type: "text" },
+];
+
+// 银行排名字段 → 银行中文名（便于汇总输出）
+const BANK_NAMES = {
+  DBS: "DBS 星展", HSBC: "HSBC 汇丰", HS: "Hang Seng 恒生",
+  BOC: "BOC HK 中银香港", CMB: "招行永隆 / 工银亚洲",
+  Wise: "Wise", Air: "Airwallex", PP: "PingPong", XT: "XTransfer",
+  SC: "Standard Chartered 渣打",
+};
+
+function readRadio(name){
+  const el = form.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : null;
+}
+function readCheckbox(name){
+  return Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map(el => el.value);
+}
+function readText(name){
+  const el = form.querySelector(`[name="${name}"]`);
+  return el ? el.value.trim() : "";
+}
+
+function buildSummary(){
+  const lines = [];
+  lines.push("═══════════════════════════════════");
+  lines.push("  银行流水工具 · 产品调研问卷");
+  lines.push("═══════════════════════════════════");
+  const who = readText("who");
+  if(who) lines.push(`填写人：${who}`);
+  lines.push(`时间：${new Date().toLocaleString("zh-CN", {hour12:false})}`);
+  lines.push("");
+
+  for(const q of Q){
+    lines.push(`【${q.num}】${q.title}`);
+    let val = "";
+    if(q.type === "radio"){
+      val = readRadio(q.name) || "（未答）";
+      lines.push(`  → ${val}`);
+    } else if(q.type === "checkbox"){
+      const arr = readCheckbox(q.name);
+      if(arr.length === 0){
+        lines.push("  → （未答）");
+      } else {
+        arr.forEach(v => lines.push(`  · ${v}`));
+      }
+    } else if(q.type === "checkbox-rank"){
+      // 特殊：Q4 银行
+      const arr = readCheckbox(q.name);
+      // 收集 rank
+      const ranks = [];
+      for(const [short, fullName] of Object.entries(BANK_NAMES)){
+        const r = readText(q.rankPrefix + short);
+        if(arr.includes(fullName) || r){
+          ranks.push({name: fullName, rank: r || "-"});
+        }
+      }
+      // 排序：有数字 rank 的按数字升序，其他的按勾选顺序
+      ranks.sort((a,b) => {
+        const na = parseInt(a.rank), nb = parseInt(b.rank);
+        if(isNaN(na) && isNaN(nb)) return 0;
+        if(isNaN(na)) return 1;
+        if(isNaN(nb)) return -1;
+        return na - nb;
+      });
+      if(ranks.length === 0){
+        lines.push("  → （未答）");
+      } else {
+        ranks.forEach(r => lines.push(`  · 排名 ${r.rank}  ${r.name}`));
+      }
+    } else if(q.type === "text"){
+      val = readText(q.name);
+      if(!val){ lines.push("  → （未答）"); }
+      else {
+        // 多行文本
+        val.split("\n").forEach((ln, i) => {
+          lines.push(i === 0 ? `  → ${ln}` : `    ${ln}`);
+        });
+      }
+    }
+    // 额外字段（如 q3_other, q6_software 等）
+    if(q.extra){
+      const ev = readText(q.extra);
+      if(ev){
+        const label = q.extraLabel || "补充";
+        lines.push(`  · [${label}] ${ev}`);
+      }
+    }
+    lines.push("");
+  }
+
+  lines.push("═══════════════════════════════════");
+  return lines.join("\n");
+}
+
+$("#submit").addEventListener("click", () => {
+  const text = buildSummary();
+  summaryText.textContent = text;
+  summaryMeta.textContent = `生成时间：${new Date().toLocaleString("zh-CN", {hour12:false})}`;
+  summary.style.display = "block";
+  summary.scrollIntoView({behavior:"smooth", block:"start"});
+});
+
+$("#clear").addEventListener("click", () => {
+  if(!confirm("确定要清空所有答案？")) return;
+  form.reset();
+  summary.style.display = "none";
+  window.scrollTo({top:0, behavior:"smooth"});
+});
+
+function showToast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 1600);
+}
+
+$("#copy").addEventListener("click", async () => {
+  try{
+    await navigator.clipboard.writeText(summaryText.textContent);
+    showToast("✓ 已复制，直接粘贴到微信发过来就行");
+  }catch(e){
+    // 后备方案：选中文本
+    const range = document.createRange();
+    range.selectNode(summaryText);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    showToast("无法自动复制 · 请手动 Cmd/Ctrl+C 复制选中文字");
+  }
+});
+
+$("#download").addEventListener("click", () => {
+  const text = summaryText.textContent;
+  const who = readText("who") || "匿名";
+  const date = new Date().toISOString().slice(0,10);
+  const filename = `产品调研-${who}-${date}.txt`;
+  const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
